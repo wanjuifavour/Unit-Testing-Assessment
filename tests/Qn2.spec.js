@@ -1,35 +1,87 @@
-const calculateEmployeePay = require('../tasks/Qn2');
+const calculateEmployeePay = require('../tasks/Qn2'); // Update with the correct path
 
-describe("Testing the calculateEmployeePay Function", () => {
-    const taxBrackets = [
-        { limit: 50000, rate: 0.3 },
-        { limit: 20000, rate: 0.2 },
-        { limit: 10000, rate: 0.1 }
-    ];
-    const socialSecurityRate = 0.062;
+describe('calculateEmployeePay', () => {
+    test('calculates pay with no overtime and no taxes correctly', () => {
+        const baseSalary = 1000;
+        const hoursWorked = 40;
+        const taxBrackets = [];
+        const socialSecurityRate = 0;
 
-    it("should calculate net pay with no overtime and no tax", () => {
-        const netPay = calculateEmployeePay(30000, 40, 1.5, taxBrackets, socialSecurityRate);
-        expect(netPay).toBeCloseTo(27840, 2);
+        const result = calculateEmployeePay(baseSalary, hoursWorked, taxBrackets, socialSecurityRate);
+        expect(result).toEqual({
+            grossPay: '1000.00',
+            taxDeductions: '0.00',
+            socialSecurityContributions: '0.00',
+            netPay: '1000.00',
+        });
     });
 
-    it("should calculate net pay with overtime and no tax", () => {
-        const netPay = calculateEmployeePay(30000, 45, 1.5, taxBrackets, socialSecurityRate);
-        expect(netPay).toBeCloseTo(28552.5, 2);
+    test('calculates pay with overtime correctly', () => {
+        const baseSalary = 1000;
+        const hoursWorked = 45;
+        const taxBrackets = [];
+        const socialSecurityRate = 0;
+    
+        const result = calculateEmployeePay(baseSalary, hoursWorked, taxBrackets, socialSecurityRate);
+        expect(result).toEqual({
+            grossPay: '1125.00',
+            taxDeductions: '0.00',
+            socialSecurityContributions: '0.00',
+            netPay: '1125.00',
+        });
+    });
+    
+
+    test('applies tax deductions correctly', () => {
+        const baseSalary = 1000;
+        const hoursWorked = 40;
+        const taxBrackets = [
+            { rate: 0.1, threshold: 100 },
+            { rate: 0.2, threshold: 200 },
+            { rate: 0.3, threshold: Infinity },
+        ];
+        const socialSecurityRate = 0;
+
+        const result = calculateEmployeePay(baseSalary, hoursWorked, taxBrackets, socialSecurityRate);
+        expect(result).toEqual({
+            grossPay: '1000.00',
+            taxDeductions: '230.00',
+            socialSecurityContributions: '0.00',
+            netPay: '770.00',
+        });
     });
 
-    it("should calculate net pay with overtime and tax", () => {
-        const netPay = calculateEmployeePay(60000, 50, 1.5, taxBrackets, socialSecurityRate);
-        expect(netPay).toBeCloseTo(39690, 2);
+    test('applies social security contributions correctly', () => {
+        const baseSalary = 1000;
+        const hoursWorked = 40;
+        const taxBrackets = [];
+        const socialSecurityRate = 0.062;
+
+        const result = calculateEmployeePay(baseSalary, hoursWorked, taxBrackets, socialSecurityRate);
+        expect(result).toEqual({
+            grossPay: '1000.00',
+            taxDeductions: '0.00',
+            socialSecurityContributions: '62.00',
+            netPay: '938.00',
+        });
     });
 
-    it("should calculate net pay with no overtime and tax", () => {
-        const netPay = calculateEmployeePay(70000, 40, 1.5, taxBrackets, socialSecurityRate);
-        expect(netPay).toBeCloseTo(46270, 2);
-    });
+    test('handles combined taxes and social security contributions', () => {
+        const baseSalary = 1000;
+        const hoursWorked = 45;
+        const taxBrackets = [
+            { rate: 0.1, threshold: 100 },
+            { rate: 0.2, threshold: 200 },
+            { rate: 0.3, threshold: Infinity },
+        ];
+        const socialSecurityRate = 0.062;
 
-    it("should calculate net pay with no hours worked", () => {
-        const netPay = calculateEmployeePay(30000, 0, 1.5, taxBrackets, socialSecurityRate);
-        expect(netPay).toBe(0);
+        const result = calculateEmployeePay(baseSalary, hoursWorked, taxBrackets, socialSecurityRate);
+        expect(result).toEqual({
+            grossPay: '1125.00',
+            taxDeductions: '247.50',
+            socialSecurityContributions: '69.75',
+            netPay: '807.75',
+        });
     });
 });

@@ -1,38 +1,37 @@
-const calculateEmployeePay = (baseSalary, hoursWorked, overtimeMultiplier, taxBrackets, socialSecurityRate) => {
-    if (hoursWorked === 0) {
-        return 0;
-    }
+function calculateEmployeePay(baseSalary, hoursWorked, taxBrackets, socialSecurityRate) {
+    const STANDARD_HOURS = 40;
+    const OVERTIME_RATE = 1.5;
 
+    let overtimeHours = Math.max(0, hoursWorked - STANDARD_HOURS);
+    let regularHours = Math.min(hoursWorked, STANDARD_HOURS);
 
-    let grossPay = baseSalary;
+    let regularPay = (baseSalary / STANDARD_HOURS) * regularHours;
+    let overtimePay = (baseSalary / STANDARD_HOURS) * overtimeHours * OVERTIME_RATE;
 
+    let grossPay = regularPay + overtimePay;
 
-    let overtimePay = 0;
-    if (hoursWorked > 40) {
-        const overtimeHours = hoursWorked - 40;
-        overtimePay = (baseSalary / 40) * overtimeHours * overtimeMultiplier;
-    }
-
-    grossPay += overtimePay;
-
-
-    let taxDeduction = 0;
+    let taxDeductions = 0;
     let remainingIncome = grossPay;
-    for (let bracket of taxBrackets) {
-        if (remainingIncome > bracket.limit) {
-            taxDeduction += bracket.limit * bracket.rate;
-            remainingIncome -= bracket.limit;
-        } else {
-            taxDeduction += remainingIncome * bracket.rate;
-            break;
-        }
+
+    for (let i = 0; i < taxBrackets.length; i++) {
+        const { rate, threshold } = taxBrackets[i];
+        const taxableAmount = Math.min(remainingIncome, threshold);
+        taxDeductions += taxableAmount * rate;
+        remainingIncome -= taxableAmount;
+
+        if (remainingIncome <= 0) break;
     }
 
-    const socialSecurityDeduction = grossPay * socialSecurityRate;
+    let socialSecurityContributions = grossPay * socialSecurityRate;
 
-    const netPay = grossPay - taxDeduction - socialSecurityDeduction;
+    let netPay = grossPay - taxDeductions - socialSecurityContributions;
 
-    return netPay;
-};
+    return {
+        grossPay: grossPay.toFixed(2),
+        taxDeductions: taxDeductions.toFixed(2),
+        socialSecurityContributions: socialSecurityContributions.toFixed(2),
+        netPay: netPay.toFixed(2),
+    };
+}
 
 module.exports = calculateEmployeePay;
